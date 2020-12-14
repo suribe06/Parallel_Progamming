@@ -12,7 +12,6 @@ ker = SourceModule(
         a = b;
         b = tmp;
     }
-
     __global__ void bitonicSort(int * A, int N){
         extern __shared__ int shared[];
     	int tid = threadIdx.x + blockDim.x * blockIdx.x;
@@ -46,15 +45,20 @@ ker = SourceModule(
     """
 )
 
-N = 8 #lenght of A
-A = np.int32(np.random.randint(1, 20, N)) #random numbers in A
-BLOCK_SIZE = 256
-NUM_BLOCKS = (N + BLOCK_SIZE-1)//BLOCK_SIZE
+N = 2048  #lenght of A
+A = np.int32(np.random.randint(1, 200000, N)) #random numbers in A
+
+if(N < 1024):
+  BLOCK_SIZE=N
+else:
+  BLOCK_SIZE=1024
+
+GRID_SIZE = (N + BLOCK_SIZE-1)//BLOCK_SIZE
 memSize = 4*N
 #memSize = A.nbytes
 bitonicSort = ker.get_function("bitonicSort")
 t1 = time()
-bitonicSort(drv.InOut(A), np.int32(N), block=(BLOCK_SIZE,1,1), grid=(NUM_BLOCKS,1), shared=memSize)
+bitonicSort(drv.InOut(A), np.int32(N), block=(BLOCK_SIZE,1,1), grid=(GRID_SIZE,1), shared=memSize)
 t2 = time()
 print("Execution Time {0}".format(t2 - t1))
-print(A)
+#print(A)
